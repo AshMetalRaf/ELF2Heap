@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PS2 ELF → Dynamic Heap Base (PCSX2)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="icon.png" type="image/png">
+</head>
+
+<body>
+    <div class="card steps-container">
+        <div class="step" id="step1">
+            <h1>PS2 ELF → Dynamic Heap Base (PCSX2)</h1>
+            <h2>Step 1: Load your PS2 ELF</h2>
+            <p>Drop your PS2 ELF (e.g., <code>SLUS_214.90</code>) below. The tool will automatically read the load
+                address and display it.</p>
+            <input id="file" type="file" accept="*/*">
+
+            <div id="elfStep2Header" style="display:none;">
+                <h2>Step 2: Copy the load address</h2>
+            </div>
+            <div id="elfResult" class="out" style="display:none"></div>
+
+
+            <div class="example-container">
+                <button class="example-toggle" style="display:none;">Show example instructions</button>
+                <div class="example-content-wrapper">
+                    <div class="example-content">
+                        <p>
+                            <strong>How to find the dynamic memory sequence in PCSX2 Debugger:</strong><br>
+                            1. Press <strong>G</strong> in the disassembly window.<br>
+                            2. Paste the ELF load address you got in Step 1.<br>
+                            3. Scroll down until you see the heap initialization sequence.<br>
+                            Copy the Instruction Text starting from the first <code>lui</code> up to the second
+                            <code>syscall ---</code> into the MIPS input.
+                        </p>
+                        <pre><code>
+<span class="header-line">Location Bytes     Instructions</span>
+00100198 3C040057  lui a0,0x0057
+0010019C 3C0501FE  lui a1,0x01FE
+001001A0 3C060002  lui a2,0x0002
+001001A4 3C070057  lui a3,0x0057
+001001A8 3C080010  lui t0,0x0010
+001001AC 24847170  addiu a0,a0,0x7170
+001001B0 24A50000  addiu a1,a1,0x0
+001001B4 24C60000  addiu a2,a2,0x0
+001001B8 24E7FA80  addiu a3,a3,-0x580
+001001BC 25080220  addiu t0,t0,0x220
+001001C0 0080E025  or gp,a0,zero
+001001C4 2403003C  addiu v1,zero,0x3C
+001001C8 0000000C  syscall --- 
+001001CC 0040E825  or sp,v0,zero
+001001D0 3C0400BF  lui a0,0x00BF
+001001D4 3C050000  lui a1,0x0000
+001001D8 24841E00  addiu a0,a0,0x1E00
+001001DC 24A5FFFF  addiu a1,a1,-0x1
+001001E0 2403003D  addiu v1,zero,0x3D
+001001E4 0000000C  syscall ---</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step" id="step3" style="display:none;">
+            <h2>Step 3: Paste MIPS instructions from PCSX2 debugger</h2>
+            <div class="warning">
+                <strong>Important:</strong> The site computes the dynamic memory base from the instructions you
+                paste. You must find the correct heap initialization sequence in PCSX2 yourself. Look for the code
+                near the ELF load address that ends with <code>syscall</code> and contains <code>lui a0</code> /
+                <code>addiu a0,a0</code>.<br>
+                ⚠️ Make sure to copy and paste the <strong>entire heap initialization block</strong> into the
+                MIPS input block below.
+            </div>
+
+            <div class="mips-container">
+                <textarea id="mipsBlock" rows="20" placeholder="Paste the instruction block here"></textarea>
+
+                <div class="explanation-wrapper">
+                    <div id="mipsResult" class="out" style="display:none"></div>
+
+                    <div class="explanation-container">
+                        <button class="explanation-toggle" style="display:none;">Show Memory Analysis</button>
+                        <div class="explanation-content-wrapper">
+                            <div class="explanation-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>
