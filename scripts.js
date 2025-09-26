@@ -81,15 +81,16 @@ if (mipsTextarea && mipsResultDiv) {
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const matchLUI = line.match(/lui\s+a0,0x([0-9A-Fa-f]{1,4})/);
+
+            const matchLUI = line.match(/lui\s+a0,0x([0-9A-Fa-f]{1,4})/i);
             if (matchLUI) upper = parseInt(matchLUI[1], 16);
 
-            const matchADDIU = line.match(/addiu\s+a0,a0,(-?0x[0-9A-Fa-f]+)/);
+            const matchADDIU = line.match(/addiu\s+a0,a0,(-?0x[0-9A-Fa-f]+)/i);
             if (matchADDIU) lower = parseInt(matchADDIU[1], 16);
 
-            if (line.includes('syscall')) {
+            if (line.toLowerCase().includes('syscall')) {
                 const prevLine = lines[i - 1] || '';
-                const v1Match = prevLine.match(/addiu\s+v1,zero,0x([0-9A-Fa-f]{1,2})/);
+                const v1Match = prevLine.match(/addiu\s+v1,zero,0x([0-9A-Fa-f]{1,2})/i);
                 if (v1Match && parseInt(v1Match[1], 16) === 0x3C && upper !== null && lower !== null) {
                     dynamicBase = (upper << 16) + lower;
                     break;
@@ -99,6 +100,7 @@ if (mipsTextarea && mipsResultDiv) {
 
         return { dynamicBase, upper, lower };
     }
+
 
     mipsTextarea.addEventListener('input', () => {
         const { dynamicBase, upper, lower } = computeDynamicBase(mipsTextarea.value);
@@ -132,7 +134,7 @@ if (mipsTextarea && mipsResultDiv) {
 </ul>
 `;
 
-            const secondBlockMatch = mipsText.match(/(or sp,v0,zero[\s\S]*?addiu v1,zero,0x3D[\s\S]*?syscall\s*---)/i);
+            const secondBlockMatch = mipsText.match(/(?:syscall\s*---\s*\n)([\s\S]*?addiu v1,zero,0x3D[\s\S]*?syscall\s*---)/i);
             let secondBase = null;
 
             if (secondBlockMatch) {
